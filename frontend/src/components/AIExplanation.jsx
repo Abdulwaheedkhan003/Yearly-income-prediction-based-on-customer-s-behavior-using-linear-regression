@@ -31,56 +31,66 @@ export default function AIExplanation({ darkMode, result, inputs }) {
     badgeIcon = <Minus size={20} className="text-amber-400" />;
   }
 
-  // Generate simple-language bullet points using ACTUAL input values
+  // Generate simple-language bullet points using ACTUAL input values and TRUE mathematical coefficients
   const bullets = [];
 
-  // Membership
-  if (inputs.length_of_membership > 4) {
+  // Membership (Coef: $61.67, Mean: 3.53)
+  const membershipCoef = 61.67;
+  const membershipMean = 3.53;
+  const membershipContribution = inputs.length_of_membership * membershipCoef;
+  
+  if (inputs.length_of_membership > membershipMean) {
     bullets.push({
-      text: `This customer has been a member for ${inputs.length_of_membership.toFixed(1)} years — that's long enough to build strong platform trust and loyalty, which drives higher spending.`,
+      text: `Membership loyalty is outstanding at ${inputs.length_of_membership.toFixed(1)} years (above the 3.5-year average). This stable tenure contributes a massive $${membershipContribution.toFixed(2)} directly to their annual spending forecast, proving customer loyalty is the primary business driver.`,
       sentiment: 'positive',
-    });
-  } else if (inputs.length_of_membership < 2) {
-    bullets.push({
-      text: `With only ${inputs.length_of_membership.toFixed(1)} years of membership, this is a relatively new customer still building trust with the platform.`,
-      sentiment: 'negative',
     });
   } else {
     bullets.push({
-      text: `At ${inputs.length_of_membership.toFixed(1)} years of membership, this customer shows stable loyalty — not new, but not a long-timer either.`,
+      text: `With a membership duration of ${inputs.length_of_membership.toFixed(1)} years (below the 3.5-year average), this relatively newer customer is still building platform loyalty, contributing $${membershipContribution.toFixed(2)} to their spending forecast.`,
       sentiment: 'neutral',
     });
   }
 
-  // App usage
-  if (inputs.time_on_app > 13) {
+  // App Usage (Coef: $38.60, Mean: 12.05)
+  const appCoef = 38.60;
+  const appMean = 12.05;
+  const appContribution = inputs.time_on_app * appCoef;
+  
+  if (inputs.time_on_app > appMean) {
     bullets.push({
-      text: `They spend ${inputs.time_on_app.toFixed(1)} minutes on the app per session — this is above average and strongly correlates with higher spending.`,
+      text: `Mobile app engagement is exceptionally strong at ${inputs.time_on_app.toFixed(1)} minutes per session (above the 12.1-minute average). This high mobile activity contributes $${appContribution.toFixed(2)} to their predicted yearly spending.`,
       sentiment: 'positive',
     });
   } else {
     bullets.push({
-      text: `App usage is ${inputs.time_on_app.toFixed(1)} min/session — moderate or below average, which limits spending potential.`,
+      text: `Mobile app time is moderate at ${inputs.time_on_app.toFixed(1)} minutes per session (below the 12.1-minute average), contributing $${appContribution.toFixed(2)} to their predicted annual spend. Increasing app time yields a massive $38.60 return per minute!`,
       sentiment: 'negative',
     });
   }
 
-  // Session length
-  if (inputs.avg_session_length > 34) {
+  // Session Length (Coef: $25.72, Mean: 33.05)
+  const sessionCoef = 25.72;
+  const sessionMean = 33.05;
+  const sessionContribution = inputs.avg_session_length * sessionCoef;
+  
+  if (inputs.avg_session_length > sessionMean) {
     bullets.push({
-      text: `Average session length of ${inputs.avg_session_length.toFixed(1)} minutes shows high engagement — they browse thoroughly before purchasing.`,
+      text: `Browsing session duration averages a healthy ${inputs.avg_session_length.toFixed(1)} minutes (above the 33.1-minute average). This deep browsing behavior adds $${sessionContribution.toFixed(2)} to their annual spending predictions.`,
       sentiment: 'positive',
     });
   } else {
     bullets.push({
-      text: `Session length averages ${inputs.avg_session_length.toFixed(1)} minutes — shorter sessions often mean less browsing and lower spend.`,
+      text: `Session browsing length is shorter at ${inputs.avg_session_length.toFixed(1)} minutes (below the 33.1-minute average), adding $${sessionContribution.toFixed(2)} to their prediction. Shorter browsing sessions historically reduce immediate checkout volumes.`,
       sentiment: 'neutral',
     });
   }
 
-  // Website — always a weak predictor
+  // Website Time (Coef: $0.46, Mean: 37.06)
+  const webCoef = 0.46;
+  const webContribution = inputs.time_on_website * webCoef;
+  
   bullets.push({
-    text: `Website time (${inputs.time_on_website.toFixed(1)} min) has the weakest impact on spending. The app drives purchases far more than the website does.`,
+    text: `Website time of ${inputs.time_on_website.toFixed(1)} minutes contributes a negligible $${webContribution.toFixed(2)} (due to a near-zero coefficient of $0.46). This mathematically proves that web-based marketing has virtually NO effect on customer spending compared to mobile app engagement.`,
     sentiment: 'neutral',
   });
 

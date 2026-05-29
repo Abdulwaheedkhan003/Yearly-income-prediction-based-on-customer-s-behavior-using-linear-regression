@@ -143,6 +143,20 @@ def predict(request: PredictionRequest):
         
         # Make prediction
         prediction = model.predict(features)[0]
+        final_prediction = round(prediction, 2)
+
+        # Dynamically generate personalized graphs for this user interaction
+        try:
+            from graph_generator import generate_graphs
+            input_dict = {
+                "avg_session_length": request.avg_session_length,
+                "time_on_app": request.time_on_app,
+                "time_on_website": request.time_on_website,
+                "length_of_membership": request.length_of_membership
+            }
+            generate_graphs(active_inputs=input_dict, active_prediction=final_prediction)
+        except Exception as graph_err:
+            print(f"❌ Error generating personalized graphs: {graph_err}")
         
         # Generate insights based on features
         engagement_score = (
@@ -166,7 +180,6 @@ def predict(request: PredictionRequest):
             insights += " | Strong membership loyalty detected ✅"
             confidence = min(0.99, confidence + 0.1)
             
-        final_prediction = round(prediction, 2)
         final_confidence = round(confidence, 2)
 
         # Save to database

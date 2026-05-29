@@ -146,7 +146,9 @@ export default function LandingPage({ onNavigate, darkMode }) {
           </p>
           <div className="flex justify-center gap-4">
             <a
-              href="#"
+              href="https://github.com/Abdulwaheedkhan003/Yearly-income-prediction-based-on-customer-s-behavior-using-linear-regression"
+              target="_blank"
+              rel="noopener noreferrer"
               className={`px-4 py-2 rounded-lg font-medium ${
                 darkMode
                   ? 'bg-slate-800 text-gray-300 hover:bg-slate-700'
@@ -156,7 +158,9 @@ export default function LandingPage({ onNavigate, darkMode }) {
               GitHub
             </a>
             <a
-              href="#"
+              href="https://www.linkedin.com/in/abdul-waheedkhan-s-15770a330"
+              target="_blank"
+              rel="noopener noreferrer"
               className={`px-4 py-2 rounded-lg font-medium ${
                 darkMode
                   ? 'bg-slate-800 text-gray-300 hover:bg-slate-700'

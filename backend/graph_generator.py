@@ -47,7 +47,7 @@ def _apply_premium_style(ax, fig):
     ax.grid(True, color=GRID_COLOR, linewidth=0.5, alpha=0.6)
 
 
-def generate_graphs():
+def generate_graphs(active_inputs=None, active_prediction=None):
     # Load data
     csv_path = r"C:\Users\U.SIDDIQ ALIKHAN\Desktop\Linear regression\Ecommerce Customers.csv"
     df = pd.read_csv(csv_path)
@@ -84,6 +84,14 @@ def generate_graphs():
     ax.scatter(y_test, predictions, c=BLUE, s=40, alpha=0.15, edgecolors='none', zorder=2)  # glow
     ax.scatter(y_test, predictions, c=BLUE, s=18, alpha=0.85, edgecolors='none', zorder=3)  # core
 
+    # Overlay active prediction horizontal line and glow point
+    if active_prediction is not None:
+        ax.axhline(y=active_prediction, color=AMBER, linestyle=':', lw=1.5, alpha=0.9,
+                   label=f'Current Prediction: ${active_prediction:.2f}', zorder=4)
+        # Highlight on the perfect prediction diagonal
+        ax.scatter(active_prediction, active_prediction, color=AMBER, marker='*', s=220, 
+                   edgecolor='white', lw=1.5, label='Your Active Prediction', zorder=5)
+
     ax.set_title('Actual vs Predicted Spend', fontsize=14, fontweight='bold', pad=18)
     ax.set_xlabel('Actual Yearly Spend ($)', fontsize=11)
     ax.set_ylabel('Predicted Yearly Spend ($)', fontsize=11)
@@ -109,7 +117,6 @@ def generate_graphs():
     bin_centers = 0.5 * (bins[:-1] + bins[1:])
     max_abs = max(abs(bin_centers.min()), abs(bin_centers.max()))
     for c, p in zip(bin_centers, patches):
-        # interpolate between PURPLE (center) and BLUE (edges)
         t = abs(c) / max_abs if max_abs > 0 else 0
         r1, g1, b1 = int(PURPLE[1:3], 16), int(PURPLE[3:5], 16), int(PURPLE[5:7], 16)
         r2c, g2, b2 = int(BLUE[1:3], 16), int(BLUE[3:5], 16), int(BLUE[5:7], 16)
@@ -144,14 +151,30 @@ def generate_graphs():
     fig.savefig(os.path.join(output_dir, 'residuals.png'), dpi=DPI, facecolor=BG_DARK)
     plt.close(fig)
 
-    # ── 3. Feature Importance ─────────────────────────────────────────────────
+    # ── 3. Feature Importance (Dynamic Spend Contributions if Active) ─────────
     fig, ax = plt.subplots(figsize=(7, 5))
     _apply_premium_style(ax, fig)
 
-    feature_imp = pd.DataFrame({'Feature': X.columns, 'Coefficient': lm.coef_})
-    feature_imp = feature_imp.sort_values(by='Coefficient', ascending=True)
+    if active_inputs is not None:
+        # Compute exact dollar contribution of each feature for this active user
+        contribs = {
+            'Avg. Session Length': active_inputs['avg_session_length'] * 25.724256,
+            'Time on App': active_inputs['time_on_app'] * 38.597135,
+            'Time on Website': active_inputs['time_on_website'] * 0.459148,
+            'Length of Membership': active_inputs['length_of_membership'] * 61.674732
+        }
+        feature_imp = pd.DataFrame({'Feature': list(contribs.keys()), 'Coefficient': list(contribs.values())})
+        feature_imp = feature_imp.sort_values(by='Coefficient', ascending=True)
+        title = 'Active Spend Contributions ($)'
+        subtitle = f"Total predicted spend from features: ${sum(contribs.values()):.2f} (excluding model bias)"
+        colors_bar = [BLUE, CYAN, PURPLE, EMERALD]
+    else:
+        feature_imp = pd.DataFrame({'Feature': X.columns, 'Coefficient': lm.coef_})
+        feature_imp = feature_imp.sort_values(by='Coefficient', ascending=True)
+        title = 'Feature Importance'
+        subtitle = 'How much each feature changes yearly spend per 1-unit increase'
+        colors_bar = [BLUE, CYAN, PURPLE, EMERALD]
 
-    colors_bar = [BLUE, CYAN, PURPLE, EMERALD]
     bars = ax.barh(feature_imp['Feature'], feature_imp['Coefficient'],
                    color=colors_bar, edgecolor=CARD_BG, linewidth=0.5, height=0.55, zorder=2)
 
@@ -160,13 +183,13 @@ def generate_graphs():
         ax.text(bar.get_width() + 0.8, bar.get_y() + bar.get_height() / 2,
                 f'${val:.1f}', va='center', ha='left', fontsize=10, fontweight='bold', color=TEXT_LIGHT)
 
-    ax.set_title('Feature Importance', fontsize=14, fontweight='bold', pad=18)
-    ax.set_xlabel('Coefficient ($  per unit increase)', fontsize=11)
+    ax.set_title(title, fontsize=14, fontweight='bold', pad=18)
+    ax.set_xlabel('Dollar Amount ($)', fontsize=11)
     ax.set_ylabel('')
     ax.tick_params(axis='y', labelsize=10)
 
     # Subtle subtitle
-    ax.text(0.5, -0.12, 'How much each feature changes yearly spend per 1-unit increase',
+    ax.text(0.5, -0.12, subtitle,
             transform=ax.transAxes, fontsize=8, color=TEXT_MUTED, ha='center', style='italic')
 
     fig.tight_layout(pad=1.5)
@@ -183,7 +206,6 @@ def generate_graphs():
     max_n = n.max()
     for ni, p in zip(n, patches_t):
         t = ni / max_n if max_n > 0 else 0
-        # interpolate from deep blue to cyan
         r1, g1, b1 = 0x1e, 0x3a, 0x5f
         r2c, g2, b2 = 0x06, 0xb6, 0xd4
         r = int(r1 + (r2c - r1) * t)
@@ -202,6 +224,11 @@ def generate_graphs():
     ax.axvline(x=y.mean(), color=EMERALD, linestyle='--', lw=1.5, alpha=0.8, label=f'Mean = ${y.mean():.0f}')
     ax.axvline(x=y.median(), color=AMBER, linestyle=':', lw=1.5, alpha=0.8, label=f'Median = ${y.median():.0f}')
 
+    # Overlay active prediction vertical line
+    if active_prediction is not None:
+        ax.axvline(x=active_prediction, color=AMBER, linestyle='-', lw=2, alpha=0.9,
+                   label=f'Active Customer: ${active_prediction:.2f}')
+
     ax.set_title('Distribution of Yearly Customer Spend', fontsize=14, fontweight='bold', pad=18)
     ax.set_xlabel('Yearly Amount Spent ($)', fontsize=11)
     ax.set_ylabel('Number of Customers', fontsize=11)
@@ -219,8 +246,9 @@ def generate_graphs():
     fig.savefig(os.path.join(output_dir, 'target_distribution.png'), dpi=DPI, facecolor=BG_DARK)
     plt.close(fig)
 
-    print(f"✅ All 4 graphs generated at {DPI} DPI in {output_dir}")
-    print(f"   R² = {r2:.4f} | MAE = ${mae:.2f}")
+    print(f"✅ Dynamic personalized graphs generated at {DPI} DPI in {output_dir}")
+    if active_prediction is not None:
+        print(f"   Active prediction: ${active_prediction:.2f}")
 
 
 if __name__ == '__main__':

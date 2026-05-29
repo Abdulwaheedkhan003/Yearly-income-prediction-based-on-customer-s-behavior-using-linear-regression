@@ -45,15 +45,21 @@ const GRAPH_META = [
   },
 ];
 
-export default function NotebookGraphs({ darkMode }) {
+export default function NotebookGraphs({ darkMode, result }) {
   const [loading, setLoading] = useState(true);
   const [loadedCount, setLoadedCount] = useState(0);
   const [expandedGraph, setExpandedGraph] = useState(null);
+  const [timestamp, setTimestamp] = useState(Date.now());
   const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
   useEffect(() => {
-    // Preload all images
     let loaded = 0;
+    setLoading(true);
+    setLoadedCount(0);
+    const newTimestamp = Date.now();
+    setTimestamp(newTimestamp);
+
+    // Preload all images with the new cache-busting timestamp
     GRAPH_META.forEach((g) => {
       const img = new Image();
       img.onload = img.onerror = () => {
@@ -63,13 +69,13 @@ export default function NotebookGraphs({ darkMode }) {
           setLoading(false);
         }
       };
-      img.src = `${API_BASE}/graphs/${g.file}`;
+      img.src = `${API_BASE}/graphs/${g.file}?t=${newTimestamp}`;
     });
 
     // Fallback timeout
     const timer = setTimeout(() => setLoading(false), 5000);
     return () => clearTimeout(timer);
-  }, [API_BASE]);
+  }, [API_BASE, result]);
 
   return (
     <>
@@ -166,7 +172,7 @@ export default function NotebookGraphs({ darkMode }) {
                     onClick={() => setExpandedGraph(g)}
                   >
                     <img
-                      src={`${API_BASE}/graphs/${g.file}`}
+                      src={`${API_BASE}/graphs/${g.file}?t=${timestamp}`}
                       alt={g.title}
                       className="w-full h-auto block"
                       loading="lazy"
@@ -245,7 +251,7 @@ export default function NotebookGraphs({ darkMode }) {
               {/* Modal Image */}
               <div className={`p-4 ${darkMode ? 'bg-slate-950' : 'bg-gray-50'}`}>
                 <img
-                  src={`${API_BASE}/graphs/${expandedGraph.file}`}
+                  src={`${API_BASE}/graphs/${expandedGraph.file}?t=${timestamp}`}
                   alt={expandedGraph.title}
                   className="w-full h-auto rounded-lg"
                 />

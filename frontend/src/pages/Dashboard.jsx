@@ -291,7 +291,7 @@ export default function Dashboard({ darkMode, onPredictionMade }) {
         {/* --- NEW ADDITIONS BELOW PREDICTION GRID --- */}
         {result && (
           <div className="mt-8">
-            <NotebookGraphs darkMode={darkMode} />
+            <NotebookGraphs darkMode={darkMode} result={result} />
             <AIExplanation darkMode={darkMode} result={result} inputs={inputs} />
           </div>
         )}
